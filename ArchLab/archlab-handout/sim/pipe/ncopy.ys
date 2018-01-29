@@ -1,0 +1,117 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# Michael Zhang <zhan4854@umn.edu>
+#
+# Firstly, I made use of iaddq, in order to prevent having to store
+# constants into memory in order to add them. This reduces the number
+# of instructions required for incrementing counters. This got my
+# CPE down to about 12.7.
+#
+# I also used the loop unrolling technique to unroll the loop 5
+# times. Because it was easy to use jle to compare to 0, I kept
+# processing 5 elements at a time until I got to the last 4, at
+# which point the counter would go negative. Then I would manually
+# add back and execute the instructions 1-by-1 (since there are
+# only at most 4 left).
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+  # Loop header
+  xorq %rax,%rax    # count = 0;
+  andq %rdx,%rdx    # len <= 0?
+  jle Done    # if so, goto Done:
+  iaddq $-5, %rdx # Check if it goes negative
+  jl Last4
+
+MainLoop:
+  mrmovq (%rdi), %r8
+  mrmovq 8(%rdi), %r9
+  mrmovq 16(%rdi), %r10
+  mrmovq 24(%rdi), %r11
+  mrmovq 32(%rdi), %r12
+
+  rmmovq %r8, (%rsi)
+  rmmovq %r9, 8(%rsi)
+  rmmovq %r10, 16(%rsi)
+  rmmovq %r11, 24(%rsi)
+  rmmovq %r12, 32(%rsi)
+
+  andq %r8, %r8
+  jle N2
+  iaddq $1, %rax
+N2:
+  andq %r9, %r9
+  jle N3
+  iaddq $1, %rax
+N3:
+  andq %r10, %r10
+  jle N4
+  iaddq $1, %rax
+N4:
+  andq %r11, %r11
+  jle N5
+  iaddq $1, %rax
+N5:
+  andq %r12, %r12
+  jle Final
+  iaddq $1, %rax
+
+Final:
+  iaddq $40, %rdi
+  iaddq $40, %rsi
+  iaddq $-5, %rdx
+  jge MainLoop
+
+Last4:
+  iaddq $4, %rdx # Restore from negative
+  jl Done
+  mrmovq (%rdi), %r8
+  rmmovq %r8, (%rsi)
+  andq %r8, %r8
+  jle Last3
+  iaddq $1, %rax
+Last3:
+  iaddq $-1, %rdx
+  jl Done
+  mrmovq 8(%rdi), %r8
+  rmmovq %r8, 8(%rsi)
+  andq %r8, %r8
+  jle Last2
+  iaddq $1, %rax
+Last2:
+  iaddq $-1, %rdx
+  jl Done
+  mrmovq 16(%rdi), %r8
+  rmmovq %r8, 16(%rsi)
+  andq %r8, %r8
+  jle Last1
+  iaddq $1, %rax
+Last1:
+  iaddq $-1, %rdx
+  jl Done
+  mrmovq 24(%rdi), %r8
+  rmmovq %r8, 24(%rsi)
+  andq %r8, %r8
+  jle Done
+  iaddq $1, %rax
+
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+  ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+

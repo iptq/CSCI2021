@@ -1,0 +1,40 @@
+# by Michael Zhang <zhan4854@umn.edu>
+
+# Based on asum.ys from the the examples
+# Execution begins at address 0
+    .pos 0
+    irmovq stack, %rsp
+    call main
+    halt
+
+# Sample linked list
+    .align 8
+ele1:
+    .quad 0xa00
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0x00c
+    .quad 0
+
+main:
+    irmovq ele1, %rdi           # copy the first element
+    call sum_list               # call sum_list
+    ret
+
+sum_list:
+    xorq %rax, %rax             # set %rax to 0
+loop:
+    mrmovq (%rdi), %r8          # move the number into %r8
+    mrmovq 8(%rdi), %r9         # move the address into %r9
+    addq %r8, %rax              # add to %rax
+    xorq %rdi, %rdi             # unset %rdi
+    addq %r9, %rdi              # add the address to %rdi, which also sets ZF
+test:
+    jne loop                    # jump if the address isn't 0 (more elements)
+    ret
+
+    .pos 0x200
+stack:

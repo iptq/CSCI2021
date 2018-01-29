@@ -1,0 +1,45 @@
+# by Michael Zhang <zhan4854@umn.edu>
+
+# Execution begins at address 0
+    .pos 0
+    irmovq stack, %rsp
+    call main
+    halt
+
+    .align 8
+# Source block
+src:
+    .quad 0x001
+    .quad 0x002
+    .quad 0x004
+# Destination block
+dest:
+    .quad 0x111
+    .quad 0x222
+    .quad 0x333
+
+main:
+    irmovq src, %rdi
+    irmovq dest, %rsi
+    irmovq $3, %rdx
+    call copy
+    ret
+copy:
+    irmovq $1, %r8          # decrement len
+    irmovq $8, %rcx         # increment address
+    xorq %rax, %rax
+    andq %rdx, %rdx
+    jne test
+loop:
+    mrmovq (%rdi), %r9
+    addq %rcx, %rdi
+    rmmovq %r9, (%rsi)
+    addq %rcx, %rsi
+    xorq %r9, %rax
+    subq %r8, %rdx
+test:
+    jne loop
+    ret
+
+    .pos 0x200
+stack:
